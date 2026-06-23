@@ -3,6 +3,7 @@ package com.zenpay.domain.user.service;
 import com.zenpay.domain.user.dto.LoginRequest;
 import com.zenpay.domain.user.dto.SignupRequest;
 import com.zenpay.domain.user.dto.TokenResponse;
+import com.zenpay.domain.user.dto.UserResponse;
 import com.zenpay.domain.user.entity.User;
 import com.zenpay.domain.user.repository.UserRepository;
 import com.zenpay.global.exception.BusinessException;
@@ -97,5 +98,12 @@ public class AuthService {
 
     public void logout(Long userId) {
         redisTemplate.delete(REFRESH_PREFIX + userId);
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getMe(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> BusinessException.notFound("유저를 찾을 수 없습니다."));
+        return UserResponse.from(user);
     }
 }

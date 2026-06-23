@@ -1,6 +1,8 @@
 package com.zenpay.domain.account.service;
 
+import com.zenpay.domain.account.dto.AccountLookupResponse;
 import com.zenpay.domain.account.dto.AccountResponse;
+import com.zenpay.domain.account.dto.DepositRequest;
 import com.zenpay.domain.account.dto.TransferRequest;
 import com.zenpay.domain.account.entity.Account;
 import com.zenpay.domain.account.repository.AccountRepository;
@@ -47,6 +49,37 @@ public class AccountService {
         return accountRepository.findAllByUserId(userId).stream()
                 .map(AccountResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    // 계좌번호로 계좌 조회 (송금 상대 확인용)
+    @Transactional(readOnly = true)
+    public AccountLookupResponse findByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> BusinessException.notFound("계좌를 찾을 수 없습니다."));
+        return AccountLookupResponse.from(account);
+    }
+
+    // 충전 (입금)
+    @Transactional
+    public void deposit(Long userId, Long accountId, DepositRequest request) {
+        Account account = accountRepository.findByIdWithLock(accountId)
+                .orElseThrow(() -> BusinessException.notFound("계좌를 찾을 수 없습니다."));
+
+        if (!account.getUser().getId().equals(userId)) {
+            throw BusinessException.forbidden("본인 계좌만 충전할 수 있습니다.");
+        }
+
+        Transaction transaction = Transaction.ofDeposit(account, request.getAmount(), request.getDescription());
+
+        try {
+            account.deposit(request.getAmount());
+            transaction.complete();
+        } catch (BusinessException e) {
+            transaction.fail();
+            throw e;
+        } finally {
+            transactionRepository.save(transaction);
+        }
     }
 
     // 송금

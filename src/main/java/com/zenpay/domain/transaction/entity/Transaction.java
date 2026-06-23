@@ -69,4 +69,13 @@ public class Transaction extends BaseEntity {
                 .description(description)
                 .build();
     }
+
+    public static Transaction ofDeposit(Account account, BigDecimal amount, String description) {
+        return Transaction.builder()
+                .receiverAccount(account)
+                .amount(amount)
+                .type(TransactionType.DEPOSIT)
+                .description(description)
+                .build();
+    }
 }

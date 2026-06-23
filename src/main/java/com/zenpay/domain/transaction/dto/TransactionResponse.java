@@ -12,7 +12,9 @@ import java.time.LocalDateTime;
 public class TransactionResponse {
     private Long id;
     private Long senderAccountId;
+    private String senderName;
     private Long receiverAccountId;
+    private String receiverName;
     private BigDecimal amount;
     private Transaction.TransactionType type;
     private Transaction.TransactionStatus status;
@@ -23,7 +25,9 @@ public class TransactionResponse {
         return TransactionResponse.builder()
                 .id(t.getId())
                 .senderAccountId(t.getSenderAccount() != null ? t.getSenderAccount().getId() : null)
+                .senderName(t.getSenderAccount() != null ? t.getSenderAccount().getUser().getName() : null)
                 .receiverAccountId(t.getReceiverAccount() != null ? t.getReceiverAccount().getId() : null)
+                .receiverName(t.getReceiverAccount() != null ? t.getReceiverAccount().getUser().getName() : null)
                 .amount(t.getAmount())
                 .type(t.getType())
                 .status(t.getStatus())
